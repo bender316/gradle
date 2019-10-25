@@ -17,11 +17,15 @@
 package org.gradle.internal.vfs.impl;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import org.gradle.internal.snapshot.AbstractFileSystemNode;
 import org.gradle.internal.snapshot.FileSystemNode;
 import org.gradle.internal.snapshot.MetadataSnapshot;
 import org.gradle.internal.snapshot.SnapshotFileSystemNode;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -70,6 +74,13 @@ public class DefaultFileHierarchySet implements FileHierarchySet {
     }
 
     private String normalizeFileSystemRoot(String absolutePath) {
+        try {
+            String canonicalPath = new File(absolutePath).getCanonicalPath();
+            String absolutePath1 = new File(absolutePath).getAbsolutePath();
+            Preconditions.checkArgument(canonicalPath.equals(absolutePath1), "abs: %s\ncan: %s", absolutePath1, canonicalPath);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
         return absolutePath.equals("/") ? "" : absolutePath;
     }
 }
